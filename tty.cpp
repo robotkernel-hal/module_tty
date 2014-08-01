@@ -23,9 +23,9 @@
  */
 
 #include "tty.h"
-#include "helpers.h"
-#include "kernel.h"
-#include "exceptions.h"
+#include "robotkernel/helpers.h"
+#include "robotkernel/kernel.h"
+#include "robotkernel/exceptions.h"
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/select.h>

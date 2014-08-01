@@ -25,13 +25,15 @@
 // module includes
 #include "module_tty.h"
 #include "tty.h"
+#include "config.h"
 
 // robotkernel includes
-#include "kernel.h"
-#include "module.h"
-#include "config.h"
-#include "trigger_base.h"
-#include "runnable.h"
+#include "robotkernel/kernel.h"
+#include "robotkernel/module.h"
+#include "robotkernel/trigger_base.h"
+#include "robotkernel/runnable.h"
+
+// config parser
 #include "yaml-cpp/yaml.h"
 
 using namespace std;

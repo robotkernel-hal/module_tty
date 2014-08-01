@@ -25,7 +25,7 @@
 #ifndef __TTY_H__
 #define __TTY_H__
 
-#include "kernel.h"
+#include "robotkernel/kernel.h"
 #include "module_tty.h"
 #include <string>
 #include "yaml-cpp/yaml.h"

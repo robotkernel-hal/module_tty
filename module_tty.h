@@ -26,7 +26,7 @@
 #define __MODULE_TTY_H__
 
 #include <sys/queue.h>
-#include "module_intf.h"
+#include "robotkernel/module_intf.h"
 
 #define MODNAME "module_tty"
 
