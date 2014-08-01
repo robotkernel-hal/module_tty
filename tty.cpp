@@ -1,0 +1,257 @@
+//! robotkernel module for tty serial devices
+/*!
+ * author: Robert Burger
+ *
+ * $Id$
+ */
+
+/*
+ * This file is part of robotkernel.
+ *
+ * robotkernel is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * robotkernel is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with robotkernel.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include "tty.h"
+#include "helpers.h"
+#include "kernel.h"
+#include "exceptions.h"
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/select.h>
+#include <errno.h>
+#include <sys/stat.h>
+
+#if HAVE_TERMIOS_H == 1
+#include <termios.h>
+#endif
+
+#ifdef __VXWORKS__
+#include <ioLib.h>
+#include <sioLib.h>
+#include <strings.h>
+#endif
+
+#define SWAP_BYTES(x) ((((x)&0xFF00) >> 8) | (((x)&0x00FF) << 8))
+
+using namespace std;
+using namespace robotkernel;
+using namespace module_tty;
+
+int decode_baudrate(int baudrate) {
+#if defined __QNX__ || defined __VXWORKS__
+    return baudrate;
+#else
+    switch (baudrate) {
+        case 9600:
+            return B9600;
+        case 19200:
+            return B19200;
+        case 115200:
+            return B115200;
+        case 230400:
+            return B230400;
+        default:
+            klog(error, MODNAME "unknown baudrate! only know about 9600, "
+                 "19200, 115200, 230400. assuming 115200\n");
+            return B115200;
+    }
+#endif
+}
+
+//! construction
+/*
+ * \param name fts name
+ * \param node YAML configuration node
+ */
+tty::tty(const char *name, const YAML::Node& node) {
+    _name           = string(name);
+    _fd             = -1;
+    _ifname         = node["ifname"].to<std::string>();
+    _baudrate       = node["baudrate"].to<unsigned>();
+    _timeout_us     = node["timeout_us"].to<unsigned>();
+    _state          = module_state_init;
+}
+
+//! destruction
+tty::~tty() {
+    // set to init, this will close serial device
+    set_state(module_state_init);
+}
+
+//! read from tty
+/*!
+ * \param data data to read into
+ * \param data_len length of data
+ * \return databytes read
+ */
+ssize_t tty::read(char *data, size_t data_len) {
+    if (_state < module_state_safeop)
+        // invalid state
+        return 0;
+
+    if (_timeout_us > 0) {
+        while (1) {
+            fd_set readset;
+            FD_ZERO(&readset);
+            FD_SET(_fd, &readset);
+            timeval timeout = { 0, _timeout_us };
+            int rc = select(_fd + 1, &readset, NULL, NULL, &timeout);
+            if (rc == -1) {
+                if (errno == EINTR)
+                    continue;
+
+                log(verbose, "select returned %s\n", strerror(errno));
+                return 0;
+            } else if (rc == 0) {
+                log(warning, "reading from tty timed out\n");
+                return 0;
+            }
+
+            break;
+        }
+    }
+
+    return ::read(_fd, data, data_len);
+}
+
+//! write to tty
+/*!
+ * \param data data to write
+ * \param data_len length of data
+ * \return databytes written
+ */
+ssize_t tty::write(char *data, size_t data_len) {
+    if (_state < module_state_op)
+        // invalid state
+        return 0;
+
+    return ::write(_fd, data, data_len);
+}
+
+//! set fts state
+/*!
+ * \param state new fts state
+ */
+int tty::set_state(module_state_t state) {
+    switch (state) {
+        case module_state_init:
+            if (_fd > 0) {
+                close(_fd);
+                _fd = -1;
+            }
+            break;
+        case module_state_preop: {
+            log(info, "opening serial device %s ...\n", _ifname.c_str());
+
+            if (_fd == -1) {
+                _fd = open(_ifname.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
+                if (_fd == -1)
+                    throw str_exception("open %s: %s", _ifname.c_str(), strerror(errno));
+
+                // decode baudrate, depends on platform
+                int br = decode_baudrate(_baudrate);
+
+#if HAVE_TERMIOS_H == 1
+                termios m_commState;
+
+                /* Start configuring of port for non-canonical transfer mode */
+                // Get current options for the port
+                tcgetattr(_fd, &m_commState);
+
+                int ret;
+
+                // Set baudrate.
+                ret = cfsetispeed(&m_commState, br);
+                if (ret == -1)
+                    perror("cfsetispeed");
+                ret = cfsetospeed(&m_commState, br);
+                if (ret == -1)
+                    perror("cfsetospeed");
+
+                // Enable the receiver and set local mode
+                m_commState.c_cflag |= (CLOCAL | CREAD);
+                // Set character size to data bits and set no parity Mask the characte size bits
+                m_commState.c_cflag &= ~(CSIZE|PARENB);
+                m_commState.c_cflag |= CS8;             // Select 8 data bits
+                m_commState.c_cflag &= ~CSTOPB;  // send 2 stop bits
+                // Disable hardware flow control
+#ifndef __QNX__
+                m_commState.c_cflag &= ~CRTSCTS;
+#endif
+                m_commState.c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
+                // Disable software flow control
+                m_commState.c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
+
+                // Set the new options for the port
+                ret = tcsetattr(_fd,TCSANOW, &m_commState);
+                if (ret == -1)
+                    perror("tcsetattr:");
+
+                ret = tcflush(_fd, TCIOFLUSH);
+                if (ret == -1)
+                    perror("tcflush:");
+#elif defined __VXWORKS__
+                if (ioctl(_fd, FIOBAUDRATE, br) == -1)
+                    throw str_exception("[%s|%s] FIONBAUDRATE: %s", 
+                            MODNAME, _name.c_str(), strerror(errno));
+
+                // configure interface to 8N2 configuration
+                uint32_t hwopts = CLOCAL | CREAD | CS8;// | STOPB;
+                if (ioctl(_fd, SIO_HW_OPTS_SET, hwopts) == -1)
+                    throw str_exception("[%s|%s] SIO_HW_OPTS_SET: %s", 
+                            MODNAME, _name.c_str(), strerror(errno));
+#endif
+            }
+            break;
+        }
+        case module_state_safeop:
+        case module_state_op:
+        case module_state_boot:
+            break;
+        default:
+            // invalid state
+            return -1;
+    }
+
+    // assign new state
+    _state = state;
+
+    return state;
+}
+
+//! send a request to module
+/*!
+  \param reqcode request code
+  \param ptr pointer to request structure
+  \return success or failure
+  */
+int tty::request(int reqcode, void* ptr) {
+    int ret = 0;
+
+    switch (reqcode) {
+        case MOD_REQUEST_GET_MODULE_FEAT: {
+            int *mod_feat = (int *)ptr;
+            *mod_feat = MODULE_FEAT_READ | MODULE_FEAT_WRITE;
+            break;
+        }
+        default:
+            log(verbose, "not implemented request %d\n", 
+                    reqcode);
+            ret = -1;
+            break;
+    }
+
+    return ret;
+}
+        
