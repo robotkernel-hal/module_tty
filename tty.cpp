@@ -81,6 +81,12 @@ tty::tty(const char *name, const YAML::Node& node) {
     _baudrate       = node["baudrate"].to<unsigned>();
     _timeout_us     = node["timeout_us"].to<unsigned>();
     _state          = module_state_init;
+
+    const YAML::Node *value;
+    if ((value = node.FindValue("post_open_script")))
+        _post_open = (*value).to<string>();
+    else
+        _post_open = "";
 }
 
 //! destruction
@@ -158,6 +164,11 @@ int tty::set_state(module_state_t state) {
                 _fd = open(_ifname.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
                 if (_fd == -1)
                     throw str_exception("open %s: %s", _ifname.c_str(), strerror(errno));
+                 
+                if (_post_open != "") {
+                    log(info, "executing post open script: %s\n", _post_open.c_str());
+                    system(_post_open.c_str());
+                }
 
                 // decode baudrate, depends on platform
                 int br = decode_baudrate(_baudrate);

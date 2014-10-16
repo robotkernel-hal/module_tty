@@ -40,6 +40,8 @@ class tty {
         unsigned        _timeout_us;    //! select timeout 
         int             _fd;            //! fts file descriptor
         module_state_t  _state;         //! module state
+        std::string _post_open;         //! post open script
+
 
         //! de-/construction
         /*
