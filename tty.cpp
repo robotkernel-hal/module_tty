@@ -57,13 +57,15 @@ int decode_baudrate(int baudrate) {
             return B9600;
         case 19200:
             return B19200;
+        case 38400:
+            return B38400;
         case 115200:
             return B115200;
         case 230400:
             return B230400;
         default:
             klog(error, MODNAME "unknown baudrate! only know about 9600, "
-                 "19200, 115200, 230400. assuming 115200\n");
+                 "19200, 38400, 115200, 230400. assuming 115200\n");
             return B115200;
     }
 #endif
