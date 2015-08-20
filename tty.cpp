@@ -42,13 +42,15 @@
 #include <strings.h>
 #endif
 
+MODULE_DEF(module_tty, module_tty::tty)
+
 #define SWAP_BYTES(x) ((((x)&0xFF00) >> 8) | (((x)&0x00FF) << 8))
 
 using namespace std;
 using namespace robotkernel;
 using namespace module_tty;
 
-int decode_baudrate(int baudrate) {
+int tty::decode_baudrate(int baudrate) {
 #if defined __QNX__ || defined __VXWORKS__
     return baudrate;
 #else
@@ -64,7 +66,7 @@ int decode_baudrate(int baudrate) {
         case 230400:
             return B230400;
         default:
-            klog(error, MODNAME "unknown baudrate! only know about 9600, "
+            log(module_error, "unknown baudrate! only know about 9600, "
                  "19200, 38400, 115200, 230400. assuming 115200\n");
             return B115200;
     }
@@ -76,19 +78,18 @@ int decode_baudrate(int baudrate) {
  * \param name fts name
  * \param node YAML configuration node
  */
-tty::tty(const char *name, const YAML::Node& node) {
-    _name           = string(name);
-    _fd             = -1;
-    _ifname         = node["ifname"].to<std::string>();
-    _baudrate       = node["baudrate"].to<unsigned>();
-    _timeout_us     = node["timeout_us"].to<unsigned>();
-    _state          = module_state_init;
+tty::tty(const char *name, const YAML::Node& node) 
+    : module_base("module_tty", name) {
+    fd             = -1;
+    ifname         = get_as<std::string>(node, "ifname");
+    baudrate       = get_as<unsigned>(node, "baudrate");
+    timeout_us     = get_as<unsigned>(node, "timeout_us");
 
     const YAML::Node *value;
     if ((value = node.FindValue("post_open_script")))
-        _post_open = (*value).to<string>();
+        post_open = (*value).to<string>();
     else
-        _post_open = "";
+        post_open = "";
 }
 
 //! destruction
@@ -97,32 +98,26 @@ tty::~tty() {
     set_state(module_state_init);
 }
 
-//! read from tty
-/*!
- * \param data data to read into
- * \param data_len length of data
- * \return databytes read
- */
-ssize_t tty::read(char *data, size_t data_len) {
-    if (_state < module_state_safeop)
+size_t tty::read(void* buf, size_t bufsize) {
+    if (state < module_state_safeop)
         // invalid state
         return 0;
 
-    if (_timeout_us > 0) {
+    if (timeout_us > 0) {
         while (1) {
             fd_set readset;
             FD_ZERO(&readset);
-            FD_SET(_fd, &readset);
-            timeval timeout = { 0, _timeout_us };
-            int rc = select(_fd + 1, &readset, NULL, NULL, &timeout);
+            FD_SET(fd, &readset);
+            timeval timeout = { 0, timeout_us };
+            int rc = select(fd + 1, &readset, NULL, NULL, &timeout);
             if (rc == -1) {
                 if (errno == EINTR)
                     continue;
 
-                log(verbose, "select returned %s\n", strerror(errno));
+                log(module_verbose, "select returned %s\n", strerror(errno));
                 return 0;
             } else if (rc == 0) {
-                log(warning, "reading from tty timed out\n");
+                log(module_warning, "reading from tty timed out\n");
                 return 0;
             }
 
@@ -130,21 +125,15 @@ ssize_t tty::read(char *data, size_t data_len) {
         }
     }
 
-    return ::read(_fd, data, data_len);
+    return ::read(fd, buf, bufsize);
 }
 
-//! write to tty
-/*!
- * \param data data to write
- * \param data_len length of data
- * \return databytes written
- */
-ssize_t tty::write(char *data, size_t data_len) {
-    if (_state < module_state_op)
+size_t tty::write(void* buf, size_t bufsize) {
+    if (state < module_state_op)
         // invalid state
         return 0;
 
-    return ::write(_fd, data, data_len);
+    return ::write(fd, buf, bufsize);
 }
 
 //! set fts state
@@ -154,33 +143,33 @@ ssize_t tty::write(char *data, size_t data_len) {
 int tty::set_state(module_state_t state) {
     switch (state) {
         case module_state_init:
-            if (_fd > 0) {
-                close(_fd);
-                _fd = -1;
+            if (fd > 0) {
+                close(fd);
+                fd = -1;
             }
             break;
         case module_state_preop: {
-            log(info, "opening serial device %s ...\n", _ifname.c_str());
+            log(module_info, "opening serial device %s ...\n", ifname.c_str());
 
-            if (_fd == -1) {
-                _fd = open(_ifname.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
-                if (_fd == -1)
-                    throw str_exception("open %s: %s", _ifname.c_str(), strerror(errno));
+            if (fd == -1) {
+                fd = open(ifname.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
+                if (fd == -1)
+                    throw str_exception("open %s: %s", ifname.c_str(), strerror(errno));
                  
-                if (_post_open != "") {
-                    log(info, "executing post open script: %s\n", _post_open.c_str());
-                    system(_post_open.c_str());
+                if (post_open != "") {
+                    log(module_info, "executing post open script: %s\n", post_open.c_str());
+                    system(post_open.c_str());
                 }
 
                 // decode baudrate, depends on platform
-                int br = decode_baudrate(_baudrate);
+                int br = decode_baudrate(baudrate);
 
 #if HAVE_TERMIOS_H == 1
                 termios m_commState;
 
                 /* Start configuring of port for non-canonical transfer mode */
                 // Get current options for the port
-                tcgetattr(_fd, &m_commState);
+                tcgetattr(fd, &m_commState);
 
                 int ret;
 
@@ -207,23 +196,23 @@ int tty::set_state(module_state_t state) {
                 m_commState.c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
 
                 // Set the new options for the port
-                ret = tcsetattr(_fd,TCSANOW, &m_commState);
+                ret = tcsetattr(fd,TCSANOW, &m_commState);
                 if (ret == -1)
                     perror("tcsetattr:");
 
-                ret = tcflush(_fd, TCIOFLUSH);
+                ret = tcflush(fd, TCIOFLUSH);
                 if (ret == -1)
                     perror("tcflush:");
 #elif defined __VXWORKS__
-                if (ioctl(_fd, FIOBAUDRATE, br) == -1)
+                if (ioctl(fd, FIOBAUDRATE, br) == -1)
                     throw str_exception("[%s|%s] FIONBAUDRATE: %s", 
-                            MODNAME, _name.c_str(), strerror(errno));
+                            MODNAME, name.c_str(), strerror(errno));
 
                 // configure interface to 8N2 configuration
                 uint32_t hwopts = CLOCAL | CREAD | CS8;// | STOPB;
-                if (ioctl(_fd, SIO_HW_OPTS_SET, hwopts) == -1)
+                if (ioctl(fd, SIO_HW_OPTS_SET, hwopts) == -1)
                     throw str_exception("[%s|%s] SIO_HW_OPTS_SET: %s", 
-                            MODNAME, _name.c_str(), strerror(errno));
+                            MODNAME, name.c_str(), strerror(errno));
 #endif
             }
             break;
@@ -238,7 +227,7 @@ int tty::set_state(module_state_t state) {
     }
 
     // assign new state
-    _state = state;
+    this->state = state;
 
     return state;
 }

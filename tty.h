@@ -26,21 +26,27 @@
 #define __TTY_H__
 
 #include "robotkernel/kernel.h"
-#include "module_tty.h"
+#include "robotkernel/module_base.h"
 #include <string>
 #include "yaml-cpp/yaml.h"
 
 namespace module_tty {
 
-class tty {
+class tty : public robotkernel::module_base {
+    private:
+        //! decode baudrate to define
+        /*!
+         * \param baudrate input baudrate
+         * \return baudrate define
+         */
+        int decode_baudrate(int baudrate);
+
     public:
-        std::string     _name;          //! module name
-        std::string     _ifname;        //! serial interface name
-        unsigned        _baudrate;      //! baudrate to use
-        unsigned        _timeout_us;    //! select timeout 
-        int             _fd;            //! fts file descriptor
-        module_state_t  _state;         //! module state
-        std::string _post_open;         //! post open script
+        std::string     ifname;        //!< serial interface name
+        unsigned        baudrate;      //!< baudrate to use
+        unsigned        timeout_us;    //!< select timeout 
+        int             fd;            //!< fts file descriptor
+        std::string     post_open;     //!< post open script
 
 
         //! de-/construction
@@ -57,21 +63,21 @@ class tty {
          */
         int set_state(module_state_t state);
 
-        //! read data from tty serial device
+        //! cyclic process data read
         /*!
-         * \param data data to read
-         * \param data_len length of data
-         * \return size read/written
+         * \param buf process data buffer
+         * \param bufsize size of process data buffer
+         * \return size of read bytes
          */
-        ssize_t read(char *data, size_t data_len);
+        size_t read(void* buf, size_t bufsize);
         
         //! cyclic process data write
         /*!
-          \param buf process data buffer
-          \param bufsize size of process data buffer
-          \return size of written bytes
-          */
-        ssize_t write(char *data, size_t data_len);
+         * \param buf process data buffer
+         * \param bufsize size of process data buffer
+         * \return size of written bytes
+         */
+        size_t write(void* buf, size_t bufsize);
  
         //! send a request to module
         /*!
@@ -80,17 +86,6 @@ class tty {
           \return success or failure
           */
         int request(int reqcode, void* ptr);
-        
-        //! log to kernel logging facility
-        void log(robotkernel::loglevel lvl, const char *format, ...) {
-            char buf[1024];
-
-            // format argument list
-            va_list args;
-            va_start(args, format);
-            vsnprintf(buf, 1024, format, args);
-            klog(lvl, "[%s|%s] %s", MODNAME, _name.c_str(), buf);
-        }
 };
 
 }; // namespace module_tty
