@@ -205,14 +205,14 @@ int tty::set_state(module_state_t state) {
                     perror("tcflush:");
 #elif defined __VXWORKS__
                 if (ioctl(fd, FIOBAUDRATE, br) == -1)
-                    throw str_exception("[%s|%s] FIONBAUDRATE: %s", 
-                            MODNAME, name.c_str(), strerror(errno));
+                    throw str_exception("FIONBAUDRATE: %s", 
+                            strerror(errno));
 
                 // configure interface to 8N2 configuration
                 uint32_t hwopts = CLOCAL | CREAD | CS8;// | STOPB;
                 if (ioctl(fd, SIO_HW_OPTS_SET, hwopts) == -1)
-                    throw str_exception("[%s|%s] SIO_HW_OPTS_SET: %s", 
-                            MODNAME, name.c_str(), strerror(errno));
+                    throw str_exception("SIO_HW_OPTS_SET: %s", 
+                            strerror(errno));
 #endif
             }
             break;
