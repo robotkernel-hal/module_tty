@@ -90,6 +90,7 @@ tty::tty(const char *name, const YAML::Node& node)
         post_open = (*value).to<string>();
     else
         post_open = "";
+    set_state(module_state_init);
 }
 
 //! destruction
