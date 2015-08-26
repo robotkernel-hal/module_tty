@@ -82,9 +82,14 @@ tty::tty(const char *name, const YAML::Node& node)
     : module_base("module_tty", name) {
     fd             = -1;
     ifname         = get_as<std::string>(node, "ifname");
-    baudrate       = get_as<unsigned>(node, "baudrate");
+    baudrate       = get_as<unsigned>(node, "baudrate", 0);
     timeout_us     = get_as<unsigned>(node, "timeout_us");
+    hardware_flow_control = get_as<bool>(node, "hardware_flow_control", false);
+    no_baudrate   = get_as<bool>(node, "no_baudrate", false);
 
+    if(!no_baudrate && baudrate == 0)
+	    throw str_exception("invalid baudrate: %d", baudrate);
+    
     const YAML::Node *value;
     if ((value = node.FindValue("post_open_script")))
         post_open = (*value).to<string>();
@@ -174,28 +179,39 @@ int tty::set_state(module_state_t state) {
 
                 int ret;
 
-                // Set baudrate.
-                ret = cfsetispeed(&m_commState, br);
-                if (ret == -1)
-                    perror("cfsetispeed");
-                ret = cfsetospeed(&m_commState, br);
-                if (ret == -1)
-                    perror("cfsetospeed");
+		if(!no_baudrate) {
+			// Set baudrate.
+			ret = cfsetispeed(&m_commState, br);
+			if (ret == -1)
+				perror("cfsetispeed");
+			ret = cfsetospeed(&m_commState, br);
+			if (ret == -1)
+				perror("cfsetospeed");
+		}
 
                 // Enable the receiver and set local mode
                 m_commState.c_cflag |= (CLOCAL | CREAD);
                 // Set character size to data bits and set no parity Mask the characte size bits
                 m_commState.c_cflag &= ~(CSIZE|PARENB);
                 m_commState.c_cflag |= CS8;             // Select 8 data bits
-                m_commState.c_cflag &= ~CSTOPB;  // send 2 stop bits
+                m_commState.c_cflag &= ~CSTOPB;  // send 1 stop bits
                 // Disable hardware flow control
 #ifndef __QNX__
-                m_commState.c_cflag &= ~CRTSCTS;
+		if(hardware_flow_control) {
+			log(module_info, "enabling hardware flow control\n");
+			m_commState.c_cflag |= CRTSCTS;
+		} else
+			m_commState.c_cflag &= ~CRTSCTS;
 #endif
                 m_commState.c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
                 // Disable software flow control
                 m_commState.c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
 
+		/*
+		  m_commState.c_cc[VMIN] = 1;
+		  m_commState.c_cc[VTIME] = (unsigned int)(timeout_us / 1e5);
+		*/
+		
                 // Set the new options for the port
                 ret = tcsetattr(fd,TCSANOW, &m_commState);
                 if (ret == -1)

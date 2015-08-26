@@ -44,7 +44,9 @@ class tty : public robotkernel::module_base {
     public:
         std::string     ifname;        //!< serial interface name
         unsigned        baudrate;      //!< baudrate to use
-        unsigned        timeout_us;    //!< select timeout 
+        unsigned        timeout_us;    //!< select timeout
+	bool            hardware_flow_control;
+	bool            no_baudrate;
         int             fd;            //!< fts file descriptor
         std::string     post_open;     //!< post open script
 
