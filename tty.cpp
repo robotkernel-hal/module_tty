@@ -86,6 +86,7 @@ tty::tty(const char *name, const YAML::Node& node)
     timeout_us     = get_as<unsigned>(node, "timeout_us");
     hardware_flow_control = get_as<bool>(node, "hardware_flow_control", false);
     no_baudrate   = get_as<bool>(node, "no_baudrate", false);
+    use_clocal    = get_as<bool>(node, "use_clocal", true);
 
     if(!no_baudrate && baudrate == 0)
         throw str_exception("invalid baudrate: %d", baudrate);
@@ -106,9 +107,11 @@ tty::~tty() {
 }
 
 size_t tty::read(void* buf, size_t bufsize) {
-    if (state < module_state_safeop)
+    if (state < module_state_safeop) {
+        log(module_warning, "invalid state for reading data\n");
         // invalid state
         return 0;
+    }
 
     if (timeout_us > 0) {
         while (1) {
@@ -222,12 +225,15 @@ int tty::set_state(module_state_t state) {
                 if (ret == -1)
                     perror("tcflush:");
 #elif defined __VXWORKS__
+                log(module_info, "setting baudrate to %d\n", br);
                 if (ioctl(fd, FIOBAUDRATE, br) == -1)
                     throw str_exception("FIONBAUDRATE: %s", 
                             strerror(errno));
 
-                // configure interface to 8N2 configuration
-                uint32_t hwopts = CLOCAL | CREAD | CS8;// | STOPB;
+                // configure interface to 8N1 configuration
+                uint32_t hwopts = CREAD | CS8;// | STOPB;
+                if (use_clocal)
+                    hwopts |= CLOCAL;
                 if (ioctl(fd, SIO_HW_OPTS_SET, hwopts) == -1)
                     throw str_exception("SIO_HW_OPTS_SET: %s", 
                             strerror(errno));
@@ -247,7 +253,7 @@ int tty::set_state(module_state_t state) {
     // assign new state
     this->state = state;
 
-    return state;
+    return 0;
 }
 
 //! send a request to module

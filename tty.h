@@ -49,7 +49,7 @@ class tty : public robotkernel::module_base {
         bool            no_baudrate;
         int             fd;            //!< fts file descriptor
         std::string     post_open;     //!< post open script
-
+        bool            use_clocal;
 
         //! de-/construction
         /*
