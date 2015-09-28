@@ -66,7 +66,7 @@ int tty::decode_baudrate(int baudrate) {
         case 230400:
             return B230400;
         default:
-            log(module_error, "unknown baudrate! only know about 9600, "
+            log(error, "unknown baudrate! only know about 9600, "
                  "19200, 38400, 115200, 230400. assuming 115200\n");
             return B115200;
     }
@@ -79,23 +79,18 @@ int tty::decode_baudrate(int baudrate) {
  * \param node YAML configuration node
  */
 tty::tty(const char *name, const YAML::Node& node) 
-    : module_base("module_tty", name) {
-    fd             = -1;
-    ifname         = get_as<std::string>(node, "ifname");
-    baudrate       = get_as<unsigned>(node, "baudrate", 0);
-    timeout_us     = get_as<unsigned>(node, "timeout_us");
+    : module_base("module_tty", name, node) {
+    fd                    = -1;
+    ifname                = get_as<std::string>(node, "ifname");
+    baudrate              = get_as<unsigned>(node, "baudrate", 0);
+    timeout_us            = get_as<unsigned>(node, "timeout_us");
     hardware_flow_control = get_as<bool>(node, "hardware_flow_control", false);
-    no_baudrate   = get_as<bool>(node, "no_baudrate", false);
-    use_clocal    = get_as<bool>(node, "use_clocal", true);
+    no_baudrate           = get_as<bool>(node, "no_baudrate", false);
+    use_clocal            = get_as<bool>(node, "use_clocal", true);
+    post_open             = get_as<string>(node, "post_open_script", "");
 
     if(!no_baudrate && baudrate == 0)
         throw str_exception("invalid baudrate: %d", baudrate);
-    
-    const YAML::Node *value;
-    if ((value = node.FindValue("post_open_script")))
-        post_open = (*value).to<string>();
-    else
-        post_open = "";
 
     set_state(module_state_init);
 }
@@ -108,7 +103,7 @@ tty::~tty() {
 
 size_t tty::read(void* buf, size_t bufsize) {
     if (state < module_state_safeop) {
-        log(module_warning, "invalid state for reading data\n");
+        log(warning, "invalid state for reading data\n");
         // invalid state
         return 0;
     }
@@ -124,10 +119,10 @@ size_t tty::read(void* buf, size_t bufsize) {
                 if (errno == EINTR)
                     continue;
 
-                log(module_verbose, "select returned %s\n", strerror(errno));
+                log(verbose, "select returned %s\n", strerror(errno));
                 return 0;
             } else if (rc == 0) {
-                log(module_warning, "reading from tty timed out\n");
+                log(warning, "reading from tty timed out\n");
                 return 0;
             }
 
@@ -159,7 +154,7 @@ int tty::set_state(module_state_t state) {
             }
             break;
         case module_state_preop: {
-            log(module_info, "opening serial device %s ...\n", ifname.c_str());
+            log(info, "opening serial device %s ...\n", ifname.c_str());
 
             if (fd == -1) {
                 fd = open(ifname.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
@@ -167,7 +162,7 @@ int tty::set_state(module_state_t state) {
                     throw str_exception("open %s: %s", ifname.c_str(), strerror(errno));
                  
                 if (post_open != "") {
-                    log(module_info, "executing post open script: %s\n", post_open.c_str());
+                    log(info, "executing post open script: %s\n", post_open.c_str());
                     system(post_open.c_str());
                 }
 
@@ -202,7 +197,7 @@ int tty::set_state(module_state_t state) {
                 // Disable hardware flow control
 #ifndef __QNX__
                 if(hardware_flow_control) {
-                    log(module_info, "enabling hardware flow control\n");
+                    log(info, "enabling hardware flow control\n");
                     m_commState.c_cflag |= CRTSCTS;
                 } else
                     m_commState.c_cflag &= ~CRTSCTS;
@@ -225,7 +220,7 @@ int tty::set_state(module_state_t state) {
                 if (ret == -1)
                     perror("tcflush:");
 #elif defined __VXWORKS__
-                log(module_info, "setting baudrate to %d\n", br);
+                log(info, "setting baudrate to %d\n", br);
                 if (ioctl(fd, FIOBAUDRATE, br) == -1)
                     throw str_exception("FIONBAUDRATE: %s", 
                             strerror(errno));
