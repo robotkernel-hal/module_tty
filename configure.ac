@@ -6,7 +6,7 @@ AC_INIT(
 	[module_tty],
 	m4_esyscmd_s([cat project.properties | grep VERSION    | cut -d'=' -f2 | xargs printf "%s"]),
 	m4_esyscmd_s([cat project.properties | grep MAINTAINER | cut -d'=' -f2 | xargs printf "%s"]))
-AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -53,15 +53,8 @@ if test "$rmpm_host" == "arm-angstrom-linux-gnueabi"; then
 fi
 AC_SUBST(ARCH_CFLAGS)
 
-PKG_CHECK_MODULES([ROBOTKERNEL], [robotkernel], [], [
-                    RMPM_CHECK_MODULES([ROBOTKERNEL], [robotkernel.robotkernel])
-                   ])
-LN_BASE=$(env -i "$srcdir"/scripts/get_ln_base.py $ROBOTKERNEL_DEPENDS)
-LN_GENERATE_ARGS='-md_dir $(srcdir)/message_definitions'
-LN_GENERATE="env -i $LN_BASE/scripts/ln_generate $LN_GENERATE_ARGS"
-
-AC_SUBST(LN_BASE)
-AC_SUBST(LN_GENERATE)
+m4_esyscmd([scripts/m4_deps.py])
+RM_FIND_LN_FROM_ENV
 
 AC_DEFINE_UNQUOTED(BUILD_DATE,"`date -u`",[Date (usually date of extraction from SVN).])
 AC_DEFINE_UNQUOTED(BUILD_USER,"`whoami`",[User (usually user logged in on shell).])
