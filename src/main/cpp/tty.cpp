@@ -65,9 +65,92 @@ int tty::decode_baudrate(int baudrate) {
             return B115200;
         case 230400:
             return B230400;
+        case 460800:
+#ifdef  B460800
+            return B460800;
+#else
+	    log(error, "Boudrate 460800 not available on this system. Assuming 115200\n");
+	    return B115200;
+#endif
+        case 500000:
+#ifdef  B500000
+            return B500000;
+#else
+	    log(error, "Boudrate 460800 not available on this system. Assuming 115200\n");
+	    return B115200;
+#endif
+        case 576000:
+#ifdef  B576000
+            return B576000;
+#else
+	    log(error, "Boudrate 576000 not available on this system. Assuming 115200\n");
+	    return B115200;
+#endif
+        case 921600:
+#ifdef  B921600
+            return B921600;
+#else
+	    log(error, "Boudrate 921600 not available on this system. Assuming 115200\n");
+	    return B115200;
+#endif
+        case 1000000:
+#ifdef  B1000000
+            return B1000000;
+#else
+	    log(error, "Boudrate 1000000 not available on this system. Assuming 115200\n");
+	    return B115200;
+#endif
+        case 1152000:
+#ifdef  B1152000
+            return B1152000;
+#else
+	    log(error, "Boudrate 1152000 not available on this system. Assuming 115200\n");
+	    return B115200;
+#endif
+        case 1500000:
+#ifdef  B1500000
+            return B1500000;
+#else
+	    log(error, "Boudrate 1500000 not available on this system. Assuming 115200\n");
+	    return B115200;
+#endif
+        case 2000000:
+#ifdef  B2000000
+            return B2000000;
+#else
+	    log(error, "Boudrate 2000000 not available on this system. Assuming 115200\n");
+	    return B115200;
+#endif
+        case 2500000:
+#ifdef  B2500000
+            return B2500000;
+#else
+	    log(error, "Boudrate 2500000 not available on this system. Assuming 115200\n");
+	    return B115200;
+#endif
+        case 3000000:
+#ifdef  B3000000
+            return B3000000;
+#else
+	    log(error, "Boudrate 3000000 not available on this system. Assuming 115200\n");
+	    return B115200;
+#endif
+        case 3500000:
+#ifdef  B3500000
+            return B3500000;
+#else
+	    log(error, "Boudrate 3500000 not available on this system. Assuming 115200\n");
+	    return B115200;
+#endif
+        case 4000000:
+#ifdef  B4000000
+            return B4000000;
+#else
+	    log(error, "Boudrate 4000000 not available on this system. Assuming 115200\n");
+	    return B115200;
+#endif
         default:
-            log(error, "unknown baudrate! only know about 9600, "
-                 "19200, 38400, 115200, 230400. assuming 115200\n");
+            log(error, "unknown baudrate! Assuming 115200\n");
             return B115200;
     }
 #endif
