@@ -78,7 +78,6 @@ AC_SUBST(DL_LIBS)
 
 
 AC_CONFIG_FILES([Makefile src/main/cpp/Makefile])
-AC_CONFIG_FILES([module_tty.pt], [cp module_tty.pt ${ac_abs_top_srcdir}])
 
 AC_OUTPUT
 
