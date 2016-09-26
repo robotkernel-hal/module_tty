@@ -7,9 +7,7 @@ libmodule_tty_la_CXXFLAGS = -Wall -I$(top_srcdir)/src -I$(top_builddir) @ROBOTKE
 				 @LIBSTRING_UTIL_CFLAGS@ \
 			    	 @YAML_CPP_CFLAGS@
 
-libmodule_tty_la_LDFLAGS  = -Wall -release $(PACKAGE_VERSION) @ROBOTKERNEL_LIBS@ \
-							      @LIBSTRING_UTIL_LIBS@
-
+libmodule_tty_la_LDFLAGS  = -Wall -release $(PACKAGE_VERSION)
 
 
 install-exec-hook:
