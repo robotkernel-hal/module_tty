@@ -171,6 +171,7 @@ tty::tty(const char *name, const YAML::Node& node)
     no_baudrate           = get_as<bool>(node, "no_baudrate", false);
     use_clocal            = get_as<bool>(node, "use_clocal", true);
     post_open             = get_as<string>(node, "post_open_script", "");
+    n_stop_bits           = get_as<unsigned>(node, "n_stop_bits", 1);
 
     if(!no_baudrate && baudrate == 0)
         throw str_exception("invalid baudrate: %d", baudrate);
@@ -276,7 +277,12 @@ int tty::set_state(module_state_t state) {
                 // Set character size to data bits and set no parity Mask the characte size bits
                 m_commState.c_cflag &= ~(CSIZE|PARENB);
                 m_commState.c_cflag |= CS8;             // Select 8 data bits
-                m_commState.c_cflag &= ~CSTOPB;  // send 1 stop bits
+		if(n_stop_bits == 1)
+			m_commState.c_cflag &= ~CSTOPB;  // send 1 stop bits
+		else if(n_stop_bits == 2)
+			m_commState.c_cflag |= CSTOPB;  // send 2 stop bits
+		else
+			throw str_exception("unsupported n_stop_bits!");
                 // Disable hardware flow control
 #ifndef __QNX__
                 if(hardware_flow_control) {
@@ -309,7 +315,13 @@ int tty::set_state(module_state_t state) {
                             strerror(errno));
 
                 // configure interface to 8N1 configuration
-                uint32_t hwopts = CREAD | CS8;// | STOPB;
+                uint32_t hwopts = CREAD | CS8;;
+		if (n_stop_bits == 1) {
+                    
+		} else if (n_stop_bits == 2)
+                    hwopts |= STOPB;
+                else
+                    throw str_exception("unsupported n_stop_bits!");
                 if (use_clocal)
                     hwopts |= CLOCAL;
                 if (ioctl(fd, SIO_HW_OPTS_SET, hwopts) == -1)
