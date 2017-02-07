@@ -300,8 +300,11 @@ int tty::set_state(module_state_t state) {
                    m_commState.c_cc[VTIME] = (unsigned int)(timeout_us / 1e5);
                    */
 
+                // Disable output processing
+                m_commState.c_oflag = 0;
+                
                 // Set the new options for the port
-                ret = tcsetattr(fd,TCSANOW, &m_commState);
+                ret = tcsetattr(fd, TCSANOW, &m_commState);
                 if (ret == -1)
                     perror("tcsetattr:");
 
