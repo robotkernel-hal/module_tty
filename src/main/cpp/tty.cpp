@@ -49,6 +49,7 @@ MODULE_DEF(module_tty, module_tty::tty)
 using namespace std;
 using namespace robotkernel;
 using namespace module_tty;
+using namespace string_util;
 
 int tty::decode_baudrate(int baudrate) {
 #if defined __QNX__ || defined __VXWORKS__
