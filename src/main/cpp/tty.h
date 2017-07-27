@@ -1,8 +1,6 @@
 //! robotkernel module for tty serial devices
 /*!
- * author: Robert Burger
- *
- * $Id$
+ * author: Robert Burger <robert.burger@dlr.de>
  */
 
 /*
@@ -22,17 +20,25 @@
  * along with robotkernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TTY_H__
-#define __TTY_H__
+#ifndef _MODULE_TTY__TTY_H_
+#define _MODULE_TTY__TTY_H_
 
 #include "robotkernel/kernel.h"
 #include "robotkernel/module_base.h"
+#include "robotkernel/stream.h"
 #include <string>
 #include "yaml-cpp/yaml.h"
 
 namespace module_tty {
+#ifdef EMACS
+}
+#endif
 
-class tty : public robotkernel::module_base {
+class tty : 
+    public std::enable_shared_from_this<tty>,
+    public robotkernel::module_base,
+    public robotkernel::stream
+{
     private:
         //! decode baudrate to define
         /*!
@@ -72,7 +78,7 @@ class tty : public robotkernel::module_base {
          * \return size of read bytes
          */
         size_t read(void* buf, size_t bufsize);
-        
+
         //! cyclic process data write
         /*!
          * \param buf process data buffer
@@ -80,17 +86,12 @@ class tty : public robotkernel::module_base {
          * \return size of written bytes
          */
         size_t write(void* buf, size_t bufsize);
- 
-        //! send a request to module
-        /*!
-          \param reqcode request code
-          \param ptr pointer to request structure
-          \return success or failure
-          */
-        int request(int reqcode, void* ptr);
 };
 
+#ifdef EMACS
+{
+#endif
 }; // namespace module_tty
 
-#endif /* __TTY_H__ */
+#endif /* _MODULE_TTY__TTY_H_ */
 

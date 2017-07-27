@@ -1,8 +1,6 @@
 //! robotkernel module for tty serial devices
 /*!
- * author: Robert Burger
- *
- * $Id$
+ * author: Robert Burger <robert.burger@dlr.de>
  */
 
 /*
@@ -42,7 +40,7 @@
 #include <strings.h>
 #endif
 
-MODULE_DEF(module_tty, module_tty::tty)
+MODULE_DEF(module_tty, module_tty::tty);
 
 #define SWAP_BYTES(x) ((((x)&0xFF00) >> 8) | (((x)&0x00FF) << 8))
 
@@ -162,8 +160,10 @@ int tty::decode_baudrate(int baudrate) {
  * \param name fts name
  * \param node YAML configuration node
  */
-tty::tty(const char *name, const YAML::Node& node) 
-    : module_base("module_tty", name, node) {
+tty::tty(const char *name, const YAML::Node& node) :
+    module_base("module_tty", name, node),
+    stream(name, "tty")
+{
     fd                    = -1;
     ifname                = get_as<std::string>(node, "ifname");
     baudrate              = get_as<unsigned>(node, "baudrate", 0);
@@ -230,14 +230,40 @@ size_t tty::write(void* buf, size_t bufsize) {
  * \param state new fts state
  */
 int tty::set_state(module_state_t state) {
-    switch (state) {
-        case module_state_init:
-            if (fd > 0) {
-                close(fd);
-                fd = -1;
-            }
+    kernel& k = *kernel::get_instance();
+
+    // get transition
+    uint32_t transition = GEN_STATE(this->state, state);
+
+    switch (transition) {
+        case op_2_safeop:
+        case op_2_preop:
+        case op_2_init:
+            // ====> stop sending commands
+            if (    (transition == op_2_safeop))
+                break;
+        case safeop_2_preop:
+        case safeop_2_init:
+            // ====> stop receiving measurements
+            if (    (transition == op_2_preop) ||
+                    (transition == safeop_2_preop))
+                break;
+        case preop_2_init:
+            // ====> deinit devices
+            
+            // remove stream device
+            k.remove_device(shared_from_this());
+
+            close(fd);
+            fd = -1;
+        case init_2_init:
+            // ====> do nothing
             break;
-        case module_state_preop: {
+
+        case init_2_op:
+        case init_2_safeop:
+        case init_2_preop:
+            // ====> initial devices            
             log(info, "opening serial device %s ...\n", ifname.c_str());
 
             if (fd == -1) {
@@ -318,45 +344,31 @@ int tty::set_state(module_state_t state) {
                             strerror(errno));
 #endif
             }
+
+            // add stream device
+            k.add_device(shared_from_this());
+
+            if (    (transition == init_2_preop))
+                break;
+        case preop_2_op:
+        case preop_2_safeop:
+            // ====> start receiving measurements
+            if (    (transition == init_2_safeop) ||
+                    (transition == preop_2_safeop))
+                break;
+        case safeop_2_op:
+            // ====> start sending commands
             break;
-        }
-        case module_state_safeop:
-        case module_state_op:
-        case module_state_boot:
+        case op_2_op:
+        case safeop_2_safeop:
+        case preop_2_preop:
+            // ====> do nothing
             break;
+
         default:
-            // invalid state
-            return -1;
-    }
-
-    // assign new state
-    this->state = state;
-
-    return 0;
-}
-
-//! send a request to module
-/*!
-  \param reqcode request code
-  \param ptr pointer to request structure
-  \return success or failure
-  */
-int tty::request(int reqcode, void* ptr) {
-    int ret = 0;
-
-    switch (reqcode) {
-        case MOD_REQUEST_GET_MODULE_FEAT: {
-            int *mod_feat = (int *)ptr;
-            *mod_feat = MODULE_FEAT_READ | MODULE_FEAT_WRITE;
-            break;
-        }
-        default:
-            log(verbose, "not implemented request %d\n", 
-                    reqcode);
-            ret = -1;
             break;
     }
 
-    return ret;
+    return (this->state = state);
 }
-        
+ 
