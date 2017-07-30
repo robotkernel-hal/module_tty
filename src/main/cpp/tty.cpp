@@ -252,7 +252,7 @@ int tty::set_state(module_state_t state) {
             // ====> deinit devices
             
             // remove stream device
-            k.remove_device(shared_from_this());
+            k.remove_device(static_pointer_cast<stream>(shared_from_this()));
 
             close(fd);
             fd = -1;
@@ -346,7 +346,7 @@ int tty::set_state(module_state_t state) {
             }
 
             // add stream device
-            k.add_device(shared_from_this());
+            k.add_device(static_pointer_cast<stream>(shared_from_this()));
 
             if (    (transition == init_2_preop))
                 break;
