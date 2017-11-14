@@ -11,9 +11,9 @@ requires_version 0.2.43
 
 defines
 module_tty_base: %(dirname %(dirname %(CURDIR)))
-module_tty_base_type: %(ifexists "%(module_tty_base)/lib/libmodule_tty.so", "local_install", "rmpm_release")
-module_tty_libdir: %(ifeq "%(module_tty_base_type)", "local_install", "%(module_tty_base)/lib", "%(module_tty_base)/lib/$(ARCH)")
+module_tty_libdir:        %(subst "${exec_prefix}/", "", "@libdir@")
+module_tty_type:          %(ifexists "%(module_tty_base)/%(module_tty_libdir)/libmodule_tty.so", "local_install", "rmpm_release")
+module_tty_library_path:  %(ifeq "%(module_tty_type)", "local_install", "%(module_tty_base)/%(module_tty_libdir)", "%(module_tty_base)/lib/$(ARCH)")
 
-ifndef rk_modules: rk_modules: ""
-rk_modules: %(rk_modules):%(module_tty_libdir)
-
+ifndef rk_library_path: rk_library_path: ""
+rk_library_path: %(rk_library_path):%(module_tty_library_path)
