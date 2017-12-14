@@ -30,6 +30,8 @@
 #include <errno.h>
 #include <sys/stat.h>
 
+#include "config.h"
+
 #if HAVE_TERMIOS_H == 1
 #include <termios.h>
 #endif
