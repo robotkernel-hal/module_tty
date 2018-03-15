@@ -6,14 +6,13 @@ requires_version 0.2.43
 #     defaults to rmpm structure
 #   module_tty_libdir
 #     (optional) add custom module search paths
-#   module_tty_mds
-#     (optional) add custom message definition paths
 
 defines
 module_tty_base: %(dirname %(dirname %(CURDIR)))
 module_tty_libdir:        %(subst "${exec_prefix}/", "", "@libdir@")
-module_tty_type:          %(ifexists "%(module_tty_base)/%(module_tty_libdir)/libmodule_tty.so", "local_install", "rmpm_release")
-module_tty_library_path:  %(ifeq "%(module_tty_type)", "local_install", "%(module_tty_base)/%(module_tty_libdir)", "%(module_tty_base)/lib/$(ARCH)")
+module_tty_type:          %(ifexists "%(module_tty_base)/../$(ARCH)", "rmpm_release", "local_install")
+module_tty_library_path:  %(ifeq "%(module_tty_type)", "local_install", "%(module_tty_base)", "%(dirname %(module_tty_base))/$(ARCH)")
 
 ifndef rk_library_path: rk_library_path: ""
-rk_library_path: %(rk_library_path):%(module_tty_library_path)
+rk_library_path: %(rk_library_path):%(module_tty_library_path)/%(module_tty_libdir)
+
