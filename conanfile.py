@@ -8,9 +8,11 @@ class MainProject(ConanFile):
     description = "robotkernel-5 is a modular, easy configurable hardware abstraction framework"
     settings = "os", "compiler", "build_type", "arch"
     exports_sources = ["*", "!.gitignore"] + ["!%s" % x for x in tools.Git().excluded_files()]
-
     generators = "pkg_config"
-    requires = "robotkernel/[~=5.0]@robotkernel/unstable", "service_provider_process_data_inspection/[~=5.0]@robotkernel/unstable", "service_provider_memory_inspection/[~=5.0]@robotkernel/unstable"
+    requires = (
+            "robotkernel/[~=5.0]@robotkernel/stable",
+            "service_provider_process_data_inspection/[~=5.0]@robotkernel/stable",
+            "service_provider_memory_inspection/[~=5.0]@robotkernel/unstable" )
 
     def source(self):
         filedata = None
