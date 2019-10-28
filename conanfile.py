@@ -12,7 +12,7 @@ class MainProject(ConanFile):
     requires = (
             "robotkernel/[~=5.0]@robotkernel/stable",
             "service_provider_process_data_inspection/[~=5.0]@robotkernel/stable",
-            "service_provider_memory_inspection/[~=5.0]@robotkernel/unstable" )
+            "service_provider_memory_inspection/[~=5.0]@robotkernel/stable" )
 
     def source(self):
         filedata = None
