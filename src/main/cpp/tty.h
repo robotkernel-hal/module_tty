@@ -37,7 +37,7 @@ namespace module_tty {
 class tty : 
     public std::enable_shared_from_this<tty>,
     public robotkernel::module_base,
-    public robotkernel::stream
+    public robotkernel::serial_stream
 {
     private:
         //! decode baudrate to define
@@ -50,9 +50,12 @@ class tty :
     public:
         std::string     ifname;        //!< serial interface name
         unsigned        baudrate;      //!< baudrate to use
+        unsigned        char_size;     //!< Character size.
+        unsigned        stopbits;      //!< Number of stopbits.
+        std::string     parity;        //!< Parity: 'off', 'even' or 'odd'
         unsigned        timeout_us;    //!< select timeout
         bool            hardware_flow_control;
-        bool            no_baudrate;
+        bool            no_baudrate;        
         int             fd;            //!< fts file descriptor
         std::string     post_open;     //!< post open script
         bool            use_clocal;
@@ -87,6 +90,45 @@ class tty :
          * \return size of written bytes
          */
         size_t write(void* buf, size_t bufsize);
+
+        //! Open tty port.
+        /*!
+         * \param[in] cflag_baudrate    Decoded defined baudrate.
+         */
+        void open_port(int cflag_baudrate);
+
+        //! Close tty port.
+        void close_port();
+
+        //! Set stream device baudrate
+        /*!
+         * \param[in] baudrate  New baudrate to set.
+         */
+        void set_baudrate(int baudrate);
+
+        //! Get stream device baudrate
+        /*!
+         * \return Actual baudrate.
+         */
+        int get_baudrate() const;
+
+        //! Set serial port settings
+        /*!
+         * \param[in] char_size     Character bit size.
+         * \param[in] par           Parity setting.
+         * \param[in] stopbits      Number of Stopbits.
+         */
+        void set_port_settings(const character_size_t& char_size, 
+                const parity_t& par, const stopbits_t& stopbits);
+
+        //! Get serial port settings
+        /*!
+         * \param[out] char_size     Character bit size.
+         * \param[out] par           Parity setting.
+         * \param[out] stopbits      Number of Stopbits.
+         */
+        void get_port_settings(character_size_t& char_size, 
+                parity_t& par, stopbits_t& stopbits) const;
 };
 
 #ifdef EMACS
