@@ -13,10 +13,10 @@ This example config file can be used as a template for own configurations.
 # tty settings
 
 # Serial interface device name
-#ifname: /dev/ttyUSB0
+ifname: /dev/ttyUSB0
 
 # Baudrate to be used.
-#baudrate: 0
+baudrate: 115200
 
 # Number of data bits.
 #character_size: 8
@@ -29,7 +29,7 @@ This example config file can be used as a template for own configurations.
 #parity: off
 
 # Read timeout in microseconds.
-#timeout_us: 0
+timeout_us: 0
 
 # Enable/Disable hardware flow controler.
 #hardware_flow_control: false
