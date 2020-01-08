@@ -4,7 +4,7 @@ The **module_tty** works as a transparent layer for other modules. It gains abst
 
 This example config file can be used as a template for own configurations.
 
-```
+```yaml
 # Configuration file for module_tty.
 #
 # vim: ft=yaml
