@@ -139,6 +139,7 @@ tty::tty(const char *name, const YAML::Node& node) :
     use_clocal            = get_as<bool>    (node, "use_clocal", true);
     post_open             = get_as<string>  (node, "post_open_script", "");
     n_stop_bits           = get_as<unsigned>(node, "n_stop_bits", 1);
+    async_low_latency     = get_as<bool>    (node, "async_low_latency", true);
 
     if(!no_baudrate && baudrate == 0)
         throw str_exception("invalid baudrate: %d", baudrate);
@@ -394,6 +395,18 @@ void tty::open_port(int cflag_baudrate) {
     // clean the buffer and activate the settings for the port
     tcflush(fd, TCIFLUSH);
     tcsetattr(fd, TCSANOW, &newtio);
+        
+    if (async_low_latency) {
+        struct serial_struct ss;
+        if (ioctl(fd, TIOCGSERIAL, &ss) != 0)
+            throw str_exception("TIOCGSERIAL failed!\n");
+    
+        log(verbose, "setting low latency timer\n");
+        ss.flags |= ASYNC_LOW_LATENCY;
+        
+        if (ioctl(fd, TIOCSSERIAL, &ss) < 0)
+            throw str_exception("TIOCSSERIAL failed!\n");
+    }
 }
 
 //! Close tty port.
