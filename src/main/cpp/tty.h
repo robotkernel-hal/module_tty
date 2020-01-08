@@ -59,7 +59,6 @@ class tty :
         int             fd;            //!< fts file descriptor
         std::string     post_open;     //!< post open script
         bool            use_clocal;
-        unsigned        n_stop_bits;
         bool            async_low_latency;
 
         //! de-/construction

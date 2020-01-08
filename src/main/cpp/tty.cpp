@@ -138,7 +138,6 @@ tty::tty(const char *name, const YAML::Node& node) :
     no_baudrate           = get_as<bool>    (node, "no_baudrate", false);
     use_clocal            = get_as<bool>    (node, "use_clocal", true);
     post_open             = get_as<string>  (node, "post_open_script", "");
-    n_stop_bits           = get_as<unsigned>(node, "n_stop_bits", 1);
     async_low_latency     = get_as<bool>    (node, "async_low_latency", true);
 
     if(!no_baudrate && baudrate == 0)
