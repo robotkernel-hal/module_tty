@@ -1,0 +1,52 @@
+modules:
+- name: timer
+  so_file: libmodule_tty.so
+  config: 
+    # Configuration file for module_tty.
+    #
+    # vim: ft=yaml
+    
+    #########################################################
+    # tty settings
+    
+    # Serial interface device name
+    ifname: /dev/ttyS0
+    
+    # Baudrate to be used.
+    baudrate: 115200
+    
+    # Number of data bits.
+    #character_size: 8
+    
+    # Number of stop bits.
+    #stopbits: 1
+    
+    # Parity control.
+    # Values can be "off", "even" or "odd"
+    #parity: off
+    
+    # Read timeout in microseconds.
+    timeout_us: 0
+    
+    # Enable/Disable hardware flow controler.
+    #hardware_flow_control: false
+    
+    # Disable setting baudrate from module.
+    #no_baudrate: false
+    
+    # Ignore modem control lines.
+    #use_clocal: true
+    
+    # Execute/Disable script after opening tty device.
+    #post_open_script: ""
+    
+    # Enalbe/Disable asynchronous low latency.
+    #async_low_latency: true
+    
+    #########################################################
+    # logging settings
+    
+    # Standard robotkernel module local loglevel.
+    #loglevel: verbose
+  power_up: op
+
