@@ -139,6 +139,7 @@ tty::tty(const char *name, const YAML::Node& node) :
     use_clocal            = get_as<bool>    (node, "use_clocal", true);
     post_open             = get_as<string>  (node, "post_open_script", "");
     async_low_latency     = get_as<bool>    (node, "async_low_latency", true);
+    configure_rs485       = get_as<bool>    (node, "configure_rs485", false);
 
     if(!no_baudrate && baudrate == 0)
         throw str_exception("invalid baudrate: %d", baudrate);
@@ -234,102 +235,6 @@ int tty::set_state(module_state_t state) {
 
             // set baudrate will also open port
             set_baudrate(baudrate);
-#if old_code
-
-            if (fd == -1) {
-                fd = open(ifname.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
-                if (fd == -1)
-                    throw str_exception("open %s: %s", ifname.c_str(), strerror(errno));
-                 
-                if (post_open != "") {
-                    log(info, "executing post open script: %s\n", post_open.c_str());
-                    system(post_open.c_str());
-                }
-
-#if HAVE_TERMIOS_H == 1
-                termios m_commState;
-
-                /* Start configuring of port for non-canonical transfer mode */
-                // Get current options for the port
-                tcgetattr(fd, &m_commState);
-
-                int ret;
-
-                if(!no_baudrate) {
-                    // Set baudrate.
-                    ret = cfsetispeed(&m_commState, br);
-                    if (ret == -1)
-                        perror("cfsetispeed");
-                    ret = cfsetospeed(&m_commState, br);
-                    if (ret == -1)
-                        perror("cfsetospeed");
-                }
-
-                // Enable the receiver and set local mode
-                m_commState.c_cflag |= (CLOCAL | CREAD);
-                // Set character size to data bits and set no parity Mask the characte size bits
-                m_commState.c_cflag &= ~(CSIZE|PARENB);
-                m_commState.c_cflag |= decode_character_size(char_size);             // Select 8 data bits
-
-                if(n_stop_bits == 1)
-                    m_commState.c_cflag &= ~CSTOPB;  // send 1 stop bits
-                else if(n_stop_bits == 2)
-                    m_commState.c_cflag |= CSTOPB;  // send 2 stop bits
-                else
-                    throw str_exception("unsupported n_stop_bits!");
-
-                // Disable hardware flow control
-#ifndef __QNX__
-                if(hardware_flow_control) {
-                    log(info, "enabling hardware flow control\n");
-                    m_commState.c_cflag |= CRTSCTS;
-                } else
-                    m_commState.c_cflag &= ~CRTSCTS;
-#endif
-                m_commState.c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
-                // Disable software flow control
-                m_commState.c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
-
-                /*
-                   m_commState.c_cc[VMIN] = 1;
-                   m_commState.c_cc[VTIME] = (unsigned int)(timeout_us / 1e5);
-                   */
-
-                // Disable output processing
-                m_commState.c_oflag = 0;
-                
-                // Set the new options for the port
-                ret = tcsetattr(fd, TCSANOW, &m_commState);
-                if (ret == -1)
-                    perror("tcsetattr:");
-
-                ret = tcflush(fd, TCIOFLUSH);
-                if (ret == -1)
-                    perror("tcflush:");
-#elif defined __VXWORKS__
-                log(info, "setting baudrate to %d\n", br);
-                if (ioctl(fd, FIOBAUDRATE, br) == -1)
-                    throw str_exception("FIONBAUDRATE: %s", 
-                            strerror(errno));
-
-                // configure interface to 8N1 configuration
-                uint32_t hwopts = CREAD | decode_character_size(char_size);;
-
-                if (n_stop_bits == 1) {
-
-                } else if (n_stop_bits == 2)
-                    hwopts |= STOPB;
-                else
-                    throw str_exception("unsupported n_stop_bits!");
-
-                if (use_clocal)
-                    hwopts |= CLOCAL;
-                if (ioctl(fd, SIO_HW_OPTS_SET, hwopts) == -1)
-                    throw str_exception("SIO_HW_OPTS_SET: %s", 
-                            strerror(errno));
-#endif
-            }
-#endif
 
             // add stream device
             k.add_device(static_pointer_cast<stream>(shared_from_this()));
@@ -405,6 +310,20 @@ void tty::open_port(int cflag_baudrate) {
         
         if (ioctl(fd, TIOCSSERIAL, &ss) < 0)
             throw str_exception("TIOCSSERIAL failed!\n");
+    }
+                
+    if (configure_rs485) {
+        struct serial_rs485 data;
+        if (ioctl(fd, TIOCGRS485, &data)) {
+            throw errno_exception_tb("TIOCGRS485 failed");
+        }
+
+        data.flags |= SER_RS485_ENABLED
+            | SER_RS485_RTS_ON_SEND;
+
+        if (ioctl(fd, TIOCSRS485, &data)) {
+            throw errno_exception_tb("TIOCSRS485 failed");
+        }
     }
 }
 

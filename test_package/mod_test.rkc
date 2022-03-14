@@ -1,3 +1,5 @@
+name: test_rk
+
 modules:
 - name: timer
   so_file: libmodule_tty.so

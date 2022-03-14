@@ -60,6 +60,7 @@ class tty :
         std::string     post_open;     //!< post open script
         bool            use_clocal;
         bool            async_low_latency;
+        bool            configure_rs485;
 
         //! de-/construction
         /*
