@@ -117,7 +117,6 @@ unsigned tty::decode_character_size(const int char_size) const {
     return CS8;
 }
 
-
 //! construction
 /*
  * \param name fts name
@@ -141,8 +140,9 @@ tty::tty(const char *name, const YAML::Node& node) :
     async_low_latency     = get_as<bool>    (node, "async_low_latency", true);
     configure_rs485       = get_as<bool>    (node, "configure_rs485", false);
 
-    if(!no_baudrate && baudrate == 0)
+    if (!no_baudrate && baudrate == 0) {
         throw str_exception("invalid baudrate: %d", baudrate);
+    }
 
     set_state(module_state_init);
 }
@@ -272,8 +272,9 @@ void tty::open_port(int cflag_baudrate) {
     struct termios newtio;
 
     fd = open(ifname.c_str(), O_RDWR | O_NOCTTY/*|O_NONBLOCK */| O_SYNC);
-    if (fd < 0)
-        throw str_exception("Error opening serial port %s!\n", ifname.c_str());
+    if (fd < 0) {
+        throw errno_exception_tb("Error opening serial port %s!\n", ifname.c_str());
+    }
 
     bzero(&newtio, sizeof(newtio)); // clear struct for new port settings
 
@@ -297,19 +298,25 @@ void tty::open_port(int cflag_baudrate) {
     newtio.c_cc[VMIN]   = 1; // 1 character;
 
     // clean the buffer and activate the settings for the port
-    tcflush(fd, TCIFLUSH);
-    tcsetattr(fd, TCSANOW, &newtio);
+    if (tcflush(fd, TCIFLUSH) != 0) {
+        throw errno_exception_tb("tcflush failed!\n");
+    }
+    if (tcsetattr(fd, TCSANOW, &newtio) != 0) {
+        throw errno_exception_tb("tcflush failed!\n");
+    }
         
     if (async_low_latency) {
         struct serial_struct ss;
-        if (ioctl(fd, TIOCGSERIAL, &ss) != 0)
-            throw str_exception("TIOCGSERIAL failed!\n");
+        if (ioctl(fd, TIOCGSERIAL, &ss) != 0) {
+            throw errno_exception_tb("TIOCGSERIAL failed!\n");
+        }
     
         log(verbose, "setting low latency timer\n");
         ss.flags |= ASYNC_LOW_LATENCY;
         
-        if (ioctl(fd, TIOCSSERIAL, &ss) < 0)
-            throw str_exception("TIOCSSERIAL failed!\n");
+        if (ioctl(fd, TIOCSSERIAL, &ss) < 0) {
+            throw errno_exception_tb("TIOCSSERIAL failed!\n");
+        }
     }
                 
     if (configure_rs485) {
@@ -351,18 +358,21 @@ void tty::set_baudrate(int baudrate) {
 
         // try to set a custom divisor
         struct serial_struct ss;
-        if (ioctl(fd, TIOCGSERIAL, &ss) != 0)
-            throw str_exception("TIOCGSERIAL failed!\n");
+        if (ioctl(fd, TIOCGSERIAL, &ss) != 0) {
+            throw errno_exception_tb("TIOCGSERIAL failed!\n");
+        }
 
         ss.flags = (ss.flags & ~ASYNC_SPD_MASK) | ASYNC_SPD_CUST;
         ss.custom_divisor = (ss.baud_base + (baudrate / 2)) / baudrate;
         int closest_br = ss.baud_base / ss.custom_divisor;
 
-        if (closest_br < baudrate * 98 / 100 || closest_br > baudrate * 102 / 100)
+        if (closest_br < baudrate * 98 / 100 || closest_br > baudrate * 102 / 100) {
             throw str_exception("Cannot set speed to %d, closest is %d \n", baudrate, closest_br);
+        }
 
-        if (ioctl(fd, TIOCSSERIAL, &ss) < 0)
-            throw str_exception("TIOCSSERIAL failed!\n");
+        if (ioctl(fd, TIOCSSERIAL, &ss) < 0) {
+            throw errno_exception_tb("TIOCSSERIAL failed!\n");
+        }
     } else {
         open_port(tmp_baudrate);
     }
