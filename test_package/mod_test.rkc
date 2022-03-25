@@ -1,7 +1,7 @@
 name: test_rk
 
 modules:
-- name: timer
+- name: my_tty
   so_file: libmodule_tty.so
   config: 
     # Configuration file for module_tty.
@@ -44,6 +44,9 @@ modules:
     
     # Enalbe/Disable asynchronous low latency.
     #async_low_latency: true
+
+    # Configure interface in RS485 mode
+    #configure_rs485: false
     
     #########################################################
     # logging settings
