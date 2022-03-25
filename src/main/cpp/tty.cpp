@@ -399,5 +399,8 @@ void tty::set_port_settings(const character_size_t& char_size,
  */
 void tty::get_port_settings(character_size_t& char_size, 
         parity_t& par, stopbits_t& stopbits) const {
+    char_size = (character_size_t)this->char_size;
+    par = this->parity == "off" ? parity_off : this->parity == "even" ? parity_even : parity_odd;
+    stopbits = (stopbits_t)this->stopbits;
 }
 
