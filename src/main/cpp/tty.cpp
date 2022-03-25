@@ -53,7 +53,7 @@ using namespace robotkernel;
 using namespace module_tty;
 using namespace string_util;
 
-int tty::decode_baudrate(int baudrate) {
+int tty::decode_baudrate(const int baudrate) const {
 #if defined __QNX__ || defined __VXWORKS__
     return baudrate;
 #else
@@ -109,7 +109,7 @@ int tty::decode_baudrate(int baudrate) {
  * \param[in] char_size     Charater bit size.
  * \return     Corresponding bit size define.
  */
-unsigned decode_character_size(int char_size) {
+unsigned tty::decode_character_size(const int char_size) const {
     if (char_size == 5)      return CS5;
     else if (char_size == 6) return CS6;
     else if (char_size == 7) return CS7;

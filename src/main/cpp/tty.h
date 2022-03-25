@@ -45,7 +45,14 @@ class tty :
          * \param baudrate input baudrate
          * \return baudrate define
          */
-        int decode_baudrate(int baudrate);
+        int decode_baudrate(const int baudrate) const;
+
+        //! decodes character size to define which can be used with termios
+        /*!
+         * \param[in] char_size     Charater bit size.
+         * \return     Corresponding bit size define.
+         */
+        unsigned decode_character_size(const int char_size) const;
 
     public:
         std::string     ifname;        //!< serial interface name
