@@ -30,9 +30,6 @@
 #include "yaml-cpp/yaml.h"
 
 namespace module_tty {
-#ifdef EMACS
-}
-#endif
 
 class tty : 
     public std::enable_shared_from_this<tty>,
@@ -139,9 +136,6 @@ class tty :
                 parity_t& par, stopbits_t& stopbits) const;
 };
 
-#ifdef EMACS
-{
-#endif
 }; // namespace module_tty
 
 #endif /* _MODULE_TTY__TTY_H_ */
