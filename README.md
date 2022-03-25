@@ -46,6 +46,9 @@ timeout_us: 0
 # Enalbe/Disable asynchronous low latency.
 #async_low_latency: true
 
+# Configure interface in RS485 mode
+#configure_rs485: false
+
 #########################################################
 # logging settings
 
