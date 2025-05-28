@@ -171,9 +171,10 @@ size_t tty::read(void* buf, size_t bufsize) {
                 if (errno == EINTR)
                     continue;
 
-                log(verbose, "select returned %s\n", strerror(errno));
+                log(error, "select returned %s\n", strerror(errno));
                 return -1;
-            } else if (rc == 0) {
+            }
+	    if (rc == 0) {
                 log(warning, "reading from tty timed out\n");
                 return -1;
             }
@@ -182,7 +183,11 @@ size_t tty::read(void* buf, size_t bufsize) {
         }
     }
 
-    return ::read(fd, buf, bufsize);
+    int ret = ::read(fd, buf, bufsize);
+    if (ret == -1)
+        log(error, "read(%d) returned -1: errno %d: %s\n", bufsize, errno, strerror(errno));
+
+    return ret;
 }
 
 size_t tty::write(void* buf, size_t bufsize) {
