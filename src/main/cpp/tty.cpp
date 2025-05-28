@@ -176,6 +176,7 @@ size_t tty::read(void* buf, size_t bufsize) {
             }
 	    if (rc == 0) {
                 log(warning, "reading from tty timed out\n");
+		errno = ETIMEDOUT;
                 return -1;
             }
 
