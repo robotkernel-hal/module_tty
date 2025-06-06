@@ -1,15 +1,14 @@
 from conan import ConanFile
 
-
 class MainProject(ConanFile):
     python_requires = "conan_template/[~5]@robotkernel/stable"
     python_requires_extend = "conan_template.RobotkernelConanFile"
 
     name = "module_tty"
-    description = "robotkernel-5 is a modular, easy configurable hardware abstraction framework"
+    description = ""
     exports_sources = ["*", "!.gitignore"]
     requires = (
-        "robotkernel/[~5]@robotkernel/stable",
-        "service_provider_process_data_inspection/[~5]@robotkernel/stable",
-        "service_provider_memory_inspection/[~5]@robotkernel/stable",
+        "robotkernel/[~6]@robotkernel/unstable",
+        "service_provider_process_data_inspection/[~6]@robotkernel/unstable",
+        "service_provider_memory_inspection/[~6]@robotkernel/unstable",
     )
