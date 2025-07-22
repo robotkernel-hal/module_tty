@@ -1,0 +1,217 @@
+module-tty (6.0.0~pre1) unstable; urgency=low
+
+  * prep: 6.0.0
+
+ -- Mühlbauer, Maximilian Sebastian <Maximilian.Muehlbauer@dlr.de>  Fri, 1 Mar 2024 12:56:00 +0100
+
+module-tty (5.0.7) unstable; urgency=low
+
+  * Merge pull request #2 from robotkernel/fix/conan2
+  * chore: black format
+  * test: conan2 compatible test_package
+  * fix: conan2 version ranges
+
+ -- Mühlbauer, Maximilian Sebastian <Maximilian.Muehlbauer@dlr.de>  Fri, 1 Mar 2024 12:56:00 +0100
+
+module-tty (5.0.6) unstable; urgency=low
+
+  * switched to conan_template
+  * ADD: example rkc for configure_rs485
+  * ADD: example rkc for configure_rs485
+
+ -- Robert Burger <robert.burger@dlr.de>  Thu, 26 Jan 2023 17:15:48 +0100
+
+module-tty (5.0.5) unstable; urgency=low
+
+  * UPDATE: conan requires
+  * CHAGNE: better error handling
+  * FIX: implemented get_port_settings
+  * CHANGE: removed not needed ifdefs
+  * FIX: signature of private member funcs
+
+ -- Robert Burger <robert.burger@dlr.de>  Fri, 25 Mar 2022 08:04:40 +0100
+
+module-tty (5.0.4) unstable; urgency=low
+
+  * ADD: rs485 configuration, cleanup
+  * Merge branch 'master' of rmc-github.robotic.dlr.de:robotkernel/module-tty
+  * added test_package
+  * Update README.md
+  * Update README.md
+  * Update and rename README.wiki to README.md
+  * added example config file
+
+ -- Robert Burger <robert.burger@dlr.de>  Mon, 14 Mar 2022 09:17:38 +0100
+
+module-tty (5.0.3) unstable; urgency=low
+
+  * Merge branch 'master' of rmc-github.robotic.dlr.de:robotkernel/module-tty
+  * added async_low_latency option (default: true)
+  * fixed python-dist version
+  * switching to defaults
+
+ -- Robert Burger <robert.burger@dlr.de>  Wed, 8 Jan 2020 07:10:48 +0100
+
+module-tty (5.0.2) unstable; urgency=low
+
+  * using rk-5 requirements
+  * deriving from new serial_stream
+  * changed service provider to use stable
+
+ -- Robert Burger <robert.burger@dlr.de>  Fri, 8 Nov 2019 07:35:01 +0100
+
+module-tty (5.0.1) unstable; urgency=low
+
+  * updated build files
+  * Merge branch 'release/5.0.1'
+  * added architectures
+  * added architectures
+  * fixed jenkinsfile
+  * fixed jenkinsfile
+  * added architectures
+  * added architectures
+  * build: updated build/ci files for cissy 1.0->2.0
+  * build: updated build/ci files for cissy 1.0->2.0
+  * removed ln include file
+  * removed share folder
+  * updated jenkins file
+  * updated requires
+  * added missing m4 script
+  * updated pkg config check
+  * updated requiers
+  * added conan/jenkins stuff
+
+ -- Robert Burger <robert.burger@dlr.de>  Fri, 25 Oct 2019 10:25:11 +0200
+
+module-tty (5.0.0) unstable; urgency=low
+
+  * prep 5.0.0
+  * renamed to README.wikI
+  * added co
+  * auto commit
+  * Merge remote-tracking branch 'origin/master' into robotkernel-5
+  * fixed include
+  * fixed generation of lnc include file, fixed service definition to match yaml 1.2 spec
+  * added static pointer cast
+  * state transition base state machine
+  * added new ignores
+  * new buld system
+  * added dependency m4
+  * added pc-file template
+  * bulid system
+  * removed old build files
+  * removed old build files
+  * changes for robotkernel-5
+
+ -- Robert Burger <robert.burger@dlr.de>  Thu, 15 Mar 2018 13:16:26 +0100
+
+module-tty (4.1.2) unstable; urgency=low
+
+  * disable output processing
+
+ -- Florian Schmidt <florian.schmidt@dlr.de>  Tue, 7 Feb 2017 14:48:49 +0100
+
+module-tty (4.1.1) unstable; urgency=low
+
+  * support n_stop_bits=2
+
+ -- Florian Schmidt <florian.schmidt@dlr.de>  Fri, 3 Feb 2017 12:45:30 +0100
+
+module-tty (4.1.0) unstable; urgency=low
+
+  * 'automated_commit'
+  * 'scripts_updated'
+  * 'scripts_updated'
+  * fixed install
+  * Merge pull request #1 from stel-ma/master
+  * Fixed SIGILL on vxworks6.9.3-x86-gcc4.x
+  * 'scripts_updated'
+  * 'scripts_updated'
+  * 'replaced_with_default'
+  * 'scripts_updated'
+
+ -- Robert Burger <robert.burger@dlr.de>  Wed, 30 Nov 2016 10:28:17 +0100
+
+module-tty (4.0.1) unstable; urgency=low
+
+  * added osl42 to archs, and additional higher baudrates to configuration
+  * fixed build
+  * 'scripts_updated'
+  * 'scripts_updated'
+  * "transforming"
+  * 'scripts_updated'
+  * updated scripts
+  * added submodule scripts
+
+ -- Jan Cremer <jan.cremer@dlr.de>  Tue, 6 Sep 2016 13:00:49 +0200
+
+module-tty (4.0.0) unstable; urgency=low
+
+  * prep 4.0.0
+  * switched to 4.0
+
+ -- Robert Burger <robert.burger@dlr.de>  Mon, 28 Sep 2015 08:54:33 +0000
+
+module-tty (3.1.4) unstable; urgency=low
+
+  * prep 3.1.4
+  * added option to disable clocal
+  * fixed indent
+
+ -- Robert Burger <robert.burger@dlr.de>  Thu, 10 Sep 2015 11:07:44 +0000
+
+module-tty (3.1.3) unstable; urgency=low
+
+  * prep 3.1.3: new config option no_baudrate and hardware_flow_control switch
+  * for good measure set module state to init in tty-ctor
+
+ -- Florian Schmidt <Florian.Schmidt@dlr.de>  Wed, 26 Aug 2015 13:22:36 +0000
+
+module-tty (3.1.1) unstable; urgency=low
+
+  * removed the angstrom
+  * prep 3.1.1
+  * switched to module_base
+  * use central Make.suggested and rmpm.m4
+  * eclipse project files
+
+ -- Robert Burger <robert.burger@dlr.de>  Thu, 20 Aug 2015 12:13:28 +0000
+
+module-tty (3.1.0) unstable; urgency=low
+
+  * der tim wieder mal
+  * added baudrate, prep 3.1.0
+
+ -- Robert Burger <robert.burger@dlr.de>  Mon, 2 Feb 2015 14:10:27 +0000
+
+module-tty (3.0.3) unstable; urgency=low
+
+  * prep 3.0.3
+  * added post_open_script
+
+ -- Robert Burger <robert.burger@dlr.de>  Thu, 16 Oct 2014 08:04:55 +0000
+
+module-tty (3.0.2) unstable; urgency=low
+
+  * preprare 3.0.2
+  * updated build toolchain
+
+ -- Robert Burger <robert.burger@dlr.de>  Tue, 7 Oct 2014 05:24:38 +0000
+
+module-tty (3.0.1) unstable; urgency=low
+
+  * added documentation
+
+ -- Robert Burger <robert.burger@dlr.de>  Fri, 1 Aug 2014 11:03:15 +0000
+
+module-tty (3.0.0) unstable; urgency=low
+
+  * fixed termios header search in configure.ac
+  * added external scripts
+  * fixed includes
+  * added build system
+  * imported from: https://rmsvn01.robotic.dlr.de/repos/f_soft_src/robotkernel/trunk/src/modules/tty rev: 43483
+  * creating svn directory 'https://rmsvn01.robotic.dlr.de/software/robotkernel/src/module-tty/trunk' [rmpm admintool (burger_r, 2014-08-01-12-45-39)]
+
+ -- Robert Burger <robert.burger@dlr.de>  Fri, 1 Aug 2014 10:57:55 +0000
+

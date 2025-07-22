@@ -1,0 +1,17 @@
+Source: module-tty
+Section: embedded
+Priority: optional
+Maintainer: Robert Burger <robert.burger@dlr.de>
+Build-Depends: debhelper-compat (= 13), robotkernel-dev (>=6), service-provider-process-data-inspection-dev (>=6), service-provider-memory-inspection (>=6)
+Standards-Version: 4.5.1
+Homepage: https://www.burger-system.de/robotkernel/module_tty
+Vcs-Browser: https://github.com/robotkernel-hal/module_tty.git
+Vcs-Git: https://github.com/robotkernel-hal/module_tty.git
+Rules-Requires-Root: no
+
+Package: module-tty
+Architecture: any
+Multi-Arch: same
+Depends: robotkernel ${misc:Depends}
+Description: Robotkernel module to communicate with tty-hardware.
+  The module-tty works as a transparent layer for other modules. It gains abstract access to a tty-hardware interface.
