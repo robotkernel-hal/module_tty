@@ -1,5 +1,5 @@
 ACLOCAL_AMFLAGS = -I m4 
-SUBDIRS=src/main/cpp
+SUBDIRS=src
 
 install-exec-hook:
 	mkdir -p $(DESTDIR)$(prefix)/doc

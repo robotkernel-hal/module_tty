@@ -4,31 +4,33 @@
  */
 
 /*
- * This file is part of robotkernel.
+ * This file is part of module_tty.
  *
- * robotkernel is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * robotkernel is distributed in the hope that it will be useful,
+ * module_tty is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3 of the License, or (at your option) any later version.
+ * 
+ * module_tty is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with robotkernel.  If not, see <http://www.gnu.org/licenses/>.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with module_tty; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
 #include "tty.h"
 #include "robotkernel/helpers.h"
-#include "robotkernel/kernel.h"
+#include "robotkernel/robotkernel.h"
 #include "robotkernel/exceptions.h"
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/select.h>
 #include <errno.h>
 #include <sys/stat.h>
+#include <stdexcept>
 
 #include "config.h"
 
@@ -51,7 +53,6 @@ MODULE_DEF(module_tty, module_tty::tty);
 using namespace std;
 using namespace robotkernel;
 using namespace module_tty;
-using namespace string_util;
 
 int tty::decode_baudrate(const int baudrate) const {
 #if defined __QNX__ || defined __VXWORKS__
@@ -141,7 +142,7 @@ tty::tty(const char *name, const YAML::Node& node) :
     configure_rs485       = get_as<bool>    (node, "configure_rs485", false);
 
     if (!no_baudrate && baudrate == 0) {
-        throw str_exception("invalid baudrate: %d", baudrate);
+        throw runtime_error(string_printf("invalid baudrate: %d", baudrate));
     }
 
     set_state(module_state_init);
@@ -204,8 +205,6 @@ size_t tty::write(void* buf, size_t bufsize) {
  * \param state new fts state
  */
 int tty::set_state(module_state_t state) {
-    kernel& k = *kernel::get_instance();
-
     // get transition
     uint32_t transition = GEN_STATE(this->state, state);
 
@@ -226,7 +225,7 @@ int tty::set_state(module_state_t state) {
             // ====> deinit devices
             
             // remove stream device
-            k.remove_device(static_pointer_cast<stream>(shared_from_this()));
+            robotkernel::remove_device(static_pointer_cast<stream>(shared_from_this()));
 
             close_port();
         case init_2_init:
@@ -243,7 +242,7 @@ int tty::set_state(module_state_t state) {
             set_baudrate(baudrate);
 
             // add stream device
-            k.add_device(static_pointer_cast<stream>(shared_from_this()));
+            robotkernel::add_device(static_pointer_cast<stream>(shared_from_this()));
 
             if (    (transition == init_2_preop))
                 break;
@@ -279,7 +278,7 @@ void tty::open_port(int cflag_baudrate) {
 
     fd = open(ifname.c_str(), O_RDWR | O_NOCTTY/*|O_NONBLOCK */| O_SYNC);
     if (fd < 0) {
-        throw errno_exception_tb("Error opening serial port %s!\n", ifname.c_str());
+        throw runtime_error(string_printf("Error opening serial port %s: %s\n", ifname.c_str(), strerror(errno)));
     }
 
     bzero(&newtio, sizeof(newtio)); // clear struct for new port settings
@@ -305,37 +304,37 @@ void tty::open_port(int cflag_baudrate) {
 
     // clean the buffer and activate the settings for the port
     if (tcflush(fd, TCIFLUSH) != 0) {
-        throw errno_exception_tb("tcflush failed!\n");
+        throw runtime_error(string_printf("tcflush failed: %s\n", strerror(errno)));
     }
     if (tcsetattr(fd, TCSANOW, &newtio) != 0) {
-        throw errno_exception_tb("tcflush failed!\n");
+        throw runtime_error(string_printf("tcflush failed: %s\n", strerror(errno)));
     }
         
     if (async_low_latency) {
         struct serial_struct ss;
         if (ioctl(fd, TIOCGSERIAL, &ss) != 0) {
-            throw errno_exception_tb("TIOCGSERIAL failed!\n");
+            throw runtime_error(string_printf("TIOCGSERIAL failed: %s\n", strerror(errno)));
         }
     
         log(verbose, "setting low latency timer\n");
         ss.flags |= ASYNC_LOW_LATENCY;
         
         if (ioctl(fd, TIOCSSERIAL, &ss) < 0) {
-            throw errno_exception_tb("TIOCSSERIAL failed!\n");
+            throw runtime_error(string_printf("TIOCSSERIAL failed: %s\n", strerror(errno)));
         }
     }
                 
     if (configure_rs485) {
         struct serial_rs485 data;
         if (ioctl(fd, TIOCGRS485, &data)) {
-            throw errno_exception_tb("TIOCGRS485 failed");
+            throw runtime_error(string_printf("TIOCGRS485 failed: %s\n", strerror(errno)));
         }
 
         data.flags |= SER_RS485_ENABLED
             | SER_RS485_RTS_ON_SEND;
 
         if (ioctl(fd, TIOCSRS485, &data)) {
-            throw errno_exception_tb("TIOCSRS485 failed");
+            throw runtime_error(string_printf("TIOCSRS485 failed: %s\n", strerror(errno)));
         }
     }
 }
@@ -365,7 +364,7 @@ void tty::set_baudrate(int baudrate) {
         // try to set a custom divisor
         struct serial_struct ss;
         if (ioctl(fd, TIOCGSERIAL, &ss) != 0) {
-            throw errno_exception_tb("TIOCGSERIAL failed!\n");
+            throw runtime_error(string_printf("TIOCGSERIAL failed: %s\n", strerror(errno)));
         }
 
         ss.flags = (ss.flags & ~ASYNC_SPD_MASK) | ASYNC_SPD_CUST;
@@ -373,11 +372,11 @@ void tty::set_baudrate(int baudrate) {
         int closest_br = ss.baud_base / ss.custom_divisor;
 
         if (closest_br < baudrate * 98 / 100 || closest_br > baudrate * 102 / 100) {
-            throw str_exception("Cannot set speed to %d, closest is %d \n", baudrate, closest_br);
+            throw runtime_error(string_printf("Cannot set speed to %d, closest is %d \n", baudrate, closest_br));
         }
 
         if (ioctl(fd, TIOCSSERIAL, &ss) < 0) {
-            throw errno_exception_tb("TIOCSSERIAL failed!\n");
+            throw runtime_error(string_printf("TIOCSSERIAL failed: %s\n", strerror(errno)));
         }
     } else {
         open_port(tmp_baudrate);

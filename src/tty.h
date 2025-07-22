@@ -4,26 +4,26 @@
  */
 
 /*
- * This file is part of robotkernel.
+ * This file is part of module_tty.
  *
- * robotkernel is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * robotkernel is distributed in the hope that it will be useful,
+ * module_tty is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3 of the License, or (at your option) any later version.
+ * 
+ * module_tty is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with robotkernel.  If not, see <http://www.gnu.org/licenses/>.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with module_tty; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef _MODULE_TTY__TTY_H_
-#define _MODULE_TTY__TTY_H_
+#ifndef MODULE_TTY__TTY_H
+#define MODULE_TTY__TTY_H
 
-#include "robotkernel/kernel.h"
 #include "robotkernel/module_base.h"
 #include "robotkernel/stream.h"
 #include <string>
@@ -138,5 +138,5 @@ class tty :
 
 }; // namespace module_tty
 
-#endif /* _MODULE_TTY__TTY_H_ */
+#endif /* MODULE_TTY__TTY_H */
 
