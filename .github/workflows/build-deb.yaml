@@ -105,7 +105,7 @@ jobs:
       - name: Upload .deb package artifact
         uses: actions/upload-artifact@v4
         with:
-          name: service-provider-module-tty-${{ steps.sanitize.outputs.sanitized_image }}
+          name: module-tty-${{ steps.sanitize.outputs.sanitized_image }}
           path: artifacts/${{ matrix.os }}/${{ matrix.version }}/
 
       - name: Debug artifact files
@@ -131,8 +131,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           UPLOAD_URL: ${{ steps.get_release.outputs.upload_url }}
-          FILE_PATH: ./artifacts/${{ matrix.os }}/${{ matrix.version }}/service-provider-module-tty_${{ steps.sanitize.outputs.sanitized_image }}.deb
-          FILE_NAME: service-provider-module-tty_${{ steps.sanitize.outputs.sanitized_image }}.deb
+          FILE_PATH: ./artifacts/${{ matrix.os }}/${{ matrix.version }}/module-tty_${{ steps.sanitize.outputs.sanitized_image }}.deb
+          FILE_NAME: module-tty_${{ steps.sanitize.outputs.sanitized_image }}.deb
         run: |
           echo "Uploading $FILE_PATH to $UPLOAD_URL?name=$FILE_NAME"
           curl --fail -X POST \
@@ -147,7 +147,7 @@ jobs:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
         shell: bash
         run: |
-          FILENAME="artifacts/${{ matrix.os }}/${{ matrix.version }}/service-provider-module-tty_${{ steps.sanitize.outputs.sanitized_image }}.deb"
+          FILENAME="artifacts/${{ matrix.os }}/${{ matrix.version }}/module-tty_${{ steps.sanitize.outputs.sanitized_image }}.deb"
         
           python3 -m venv cloudsmith
           cd cloudsmith
