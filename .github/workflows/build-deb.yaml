@@ -58,7 +58,7 @@ jobs:
 
           curl -1sLf 'https://dl.cloudsmith.io/basic/robertburger/robotkernel/setup.deb.sh' | bash
           apt-get update
-          apt-get install -y robotkernel-service-helper robotkernel-dev service-provider-module-tty-dev service-provider-memory-inspection-dev
+          apt-get install -y robotkernel-service-helper robotkernel-dev service-provider-process-data-inspection-dev service-provider-memory-inspection-dev
 
       - name: Checkout source
         uses: actions/checkout@v4
