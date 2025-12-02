@@ -225,7 +225,7 @@ int tty::set_state(module_state_t state) {
             // ====> deinit devices
             
             // remove stream device
-            robotkernel::remove_device(static_pointer_cast<stream>(shared_from_this()));
+            robotkernel::remove_device(shared_from_this_as<stream>());
 
             close_port();
         case init_2_init:
@@ -242,7 +242,7 @@ int tty::set_state(module_state_t state) {
             set_baudrate(baudrate);
 
             // add stream device
-            robotkernel::add_device(static_pointer_cast<stream>(shared_from_this()));
+            robotkernel::add_device(shared_from_this_as<stream>());
 
             if (    (transition == init_2_preop))
                 break;

@@ -32,7 +32,7 @@
 namespace module_tty {
 
 class tty : 
-    public std::enable_shared_from_this<tty>,
+    public virtual robotkernel::shared_base,
     public robotkernel::module_base,
     public robotkernel::serial_stream
 {
