@@ -52,6 +52,7 @@ MODULE_DEF(module_tty, module_tty::tty);
 
 using namespace std;
 using namespace robotkernel;
+using namespace robotkernel::helpers;
 using namespace module_tty;
 
 int tty::decode_baudrate(const int baudrate) const {
